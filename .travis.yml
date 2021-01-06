@@ -1,0 +1,19 @@
+sudo: required
+services:
+  - docker
+before_install:
+  - docker build -t nchukka/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true nchukka/react-test npm run test
+
+after_success:
+  - docker build -t nchukka/multi-client ./client
+  - docker build -t nchukka/multi-nginx ./nginx
+  - docker build -t nchukka/multi-server ./server
+  - docker build -t nchukka/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push nchukka/multi-client 
+  - docker push nchukka/multi-nginx 
+  - docker push nchukka/multi-server 
+  - docker push nchukka/multi-worker
